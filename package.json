@@ -1,0 +1,22 @@
+{
+  "name": "nightlife-app",
+  "version": "1.0.0",
+  "description": "Nightlife Coordination app for FreeCodeCamp backend certification",
+  "main": "server.js",
+  "engines": {
+    "node": "8.0.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robo-jones/fcc-nightlife-app.git"
+  },
+  "author": "Harrison Jones",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/robo-jones/fcc-nightlife-app/issues"
+  },
+  "homepage": "https://github.com/robo-jones/fcc-nightlife-app#readme"
+}
