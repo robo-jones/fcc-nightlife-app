@@ -37,6 +37,18 @@ async function rsvp(meetupsRepo, usersRepo, meetupId, userId) {
     }
 };
 
+async function unRsvp(meetupsRepo, meetupId, userId) {
+    try {
+        await meetupsRepo.removeAttendee(meetupId, userId);
+    } catch(error) {
+        if (error.message === 'Invalid meetup id') {
+            throw new Error('Invalid meetup id passed to unRsvp');
+        } else {
+            throw error;
+        }
+    }
+};
+
 function factory(placesRepo, meetupsRepo, usersRepo) {
     //verify that all repositories are proviced, and that the provided repositories have all necessary methods
     if (!placesRepo) {
@@ -76,7 +88,7 @@ function factory(placesRepo, meetupsRepo, usersRepo) {
         findMeetupLocations: findMeetupLocations.bind(undefined, placesRepo, meetupsRepo),
         createMeetup: createMeetup.bind(undefined, placesRepo, meetupsRepo),
         rsvp: rsvp.bind(undefined, meetupsRepo, usersRepo),
-        unRsvp: () => {}
+        unRsvp: unRsvp.bind(undefined, meetupsRepo)
     };
 }
 

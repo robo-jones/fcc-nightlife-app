@@ -227,9 +227,7 @@ describe('meetups business object', function() {
         let mockMeetupsRepo, mockUsersRepo;
         const mockPlacesRepo = {
             getPlaces() {},
-            isValidPlace(placeId) {
-                return Promise.resolve(true);
-            }
+            isValidPlace() {}
         };
         const testUserId = '1234';
         const testMeetupId = '5678';
@@ -299,6 +297,57 @@ describe('meetups business object', function() {
             const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
 
             const result = meetups.rsvp(testMeetupId, testUserId);
+
+            return expect(result).to.eventually.be.rejectedWith(testError);
+        });
+    });
+
+    describe('unRsvp()', function() {
+        let mockMeetupsRepo;
+        const mockPlacesRepo = {
+            getPlaces() {},
+            isValidPlace() {}
+        };
+        const mockUsersRepo = {
+            isValidUser() {}
+        };
+        const testUserId = '1234';
+        const testMeetupId = '5678';
+
+        beforeEach(function() {
+            mockMeetupsRepo = {
+                getMeetups() {},
+                addMeetup() {},
+                addAttendee() {},
+                removeAttendee(meetupId, userId) { return Promise.resolve() }
+            };
+        });
+
+        it('should attempt to remove the provided user id from the provided meetup id', function() {
+            const removeAttendeeSpy = sinon.spy(mockMeetupsRepo, 'removeAttendee');
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+
+            meetups.unRsvp(testMeetupId, testUserId);
+
+            expect(removeAttendeeSpy).to.have.been.calledWith(testMeetupId, testUserId);
+        });
+
+        it('should return a rejected Promise with \'Invalid meetup id passed to unRsvp\' if the meetup id is invalid', function() {
+            const testError = new Error('Invalid meetup id');
+            sinon.stub(mockMeetupsRepo, 'removeAttendee').rejects(testError);
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+
+            const result = meetups.unRsvp(testMeetupId, testUserId);
+
+            return expect(result).to.eventually.be.rejectedWith('Invalid meetup id passed to unRsvp');
+        });
+
+        it('should pass through any other errors from meetupsRepo.removeAttendee()', function() {
+            const testError = new Error('error in removeAttendee()');
+            sinon.stub(mockMeetupsRepo, 'removeAttendee').rejects(testError);
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+
+            const result = meetups.unRsvp(testMeetupId, testUserId);
 
             return expect(result).to.eventually.be.rejectedWith(testError);
         });
