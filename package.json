@@ -7,7 +7,7 @@
     "node": "8.0.0"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "./node_modules/mocha/bin/mocha"
   },
   "repository": {
     "type": "git",
@@ -18,5 +18,12 @@
   "bugs": {
     "url": "https://github.com/robo-jones/fcc-nightlife-app/issues"
   },
-  "homepage": "https://github.com/robo-jones/fcc-nightlife-app#readme"
+  "homepage": "https://github.com/robo-jones/fcc-nightlife-app#readme",
+  "devDependencies": {
+    "chai": "^4.1.1",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^3.5.0",
+    "sinon": "^3.2.1",
+    "sinon-chai": "^2.13.0"
+  }
 }
