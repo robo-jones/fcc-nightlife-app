@@ -222,4 +222,85 @@ describe('meetups business object', function() {
             return expect(result).to.eventually.be.rejectedWith(testError);
         });
     });
+
+    describe('rsvp()', function() {
+        let mockMeetupsRepo, mockUsersRepo;
+        const mockPlacesRepo = {
+            getPlaces() {},
+            isValidPlace(placeId) {
+                return Promise.resolve(true);
+            }
+        };
+        const testUserId = '1234';
+        const testMeetupId = '5678';
+
+        beforeEach(function() {
+            mockMeetupsRepo = {
+                getMeetups() {},
+                addMeetup() {},
+                addAttendee() {},
+                removeAttendee() {}
+            };
+            mockUsersRepo = {
+                isValidUser() { return Promise.resolve(true) }
+            };
+        });
+
+        it('should check to determine whether the provided user id is valid', function() {
+            const isValidUserSpy = sinon.spy(mockUsersRepo, 'isValidUser');
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+
+            meetups.rsvp(testMeetupId, testUserId);
+
+            expect(isValidUserSpy).to.have.been.calledWith(testUserId);
+        });
+
+        it('should return a rejected Promise with \'Invalid user id passed to rsvp\' if the user id is invalid', function() {
+            sinon.stub(mockUsersRepo, 'isValidUser').returns(Promise.resolve(false));
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+
+            const result = meetups.rsvp(testMeetupId, testUserId);
+
+            return expect(result).to.eventually.be.rejectedWith('Invalid user id passed to rsvp');
+        });
+
+        it('should attempt to add the user to the attendees of the provided event', async function() {
+            const addAttendeeSpy = sinon.spy(mockMeetupsRepo, 'addAttendee');
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+
+            await meetups.rsvp(testMeetupId, testUserId);
+
+            expect(addAttendeeSpy).to.have.been.calledWith(testMeetupId, testUserId);
+        });
+
+        it('should return a rejected Promise with \'Invalid meetup id passed to rsvp\' if the meetup id is invalid', function() {
+            const testError = new Error('Invalid meetup id');
+            sinon.stub(mockMeetupsRepo, 'addAttendee').rejects(testError);
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+
+            const result = meetups.rsvp(testMeetupId, testUserId);
+
+            return expect(result).to.eventually.be.rejectedWith('Invalid meetup id passed to rsvp');
+        });
+
+        it('should pass through any errors from usersRepo.isValidUser()', function() {
+            const testError = new Error('error in isValidUser()');
+            sinon.stub(mockUsersRepo, 'isValidUser').rejects(testError);
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+
+            const result = meetups.rsvp(testMeetupId, testUserId);
+
+            return expect(result).to.eventually.be.rejectedWith(testError);
+        });
+
+        it('should pass through any other errors from meetupsRepo.addAttendee()', function() {
+            const testError = new Error('error in addAttendee()');
+            sinon.stub(mockMeetupsRepo, 'addAttendee').rejects(testError);
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+
+            const result = meetups.rsvp(testMeetupId, testUserId);
+
+            return expect(result).to.eventually.be.rejectedWith(testError);
+        });
+    });
 });
