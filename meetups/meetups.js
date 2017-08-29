@@ -1,10 +1,11 @@
 const createMeetupLocations = require('../models/meetupLocations.model.js');
 const createMeetupObject = require('../models/meetup.model.js');
 
-async function findMeetupLocations(placesRepo, meetupsRepo, location, locationFilter, eventFilter) {
-    const placeResults = await placesRepo.getPlaces(location, (locationFilter || {}), (eventFilter || {}));
+async function findMeetupLocations(placesRepo, meetupsRepo, location, locationFilter = {}, meetupFilter = {}) {
+    const placeResults = await placesRepo.getPlaces(location, locationFilter.type);
     const placeIds = placeResults.places.map((place) => (place.id));
-    const meetups = await meetupsRepo.getMeetups(placeIds);
+    const { type, fromDate, toDate } = meetupFilter;
+    const meetups = await meetupsRepo.getMeetups(placeIds, type, fromDate, toDate);
     const locations = placeResults.places.map((place) => ({
                                                   place,
                                                   meetups: meetups.filter((meetup) => (meetup.location === place.id))
