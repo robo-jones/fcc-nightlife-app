@@ -77,10 +77,16 @@ describe('meetups business object', function() {
         const testMeetup = createMeetup(undefined, 'some meetup', 'some meetup type', Date.now(), undefined, testPlace.id, 'some creator', ['some user id']);
         const testMeetupLocations = createMeetupLocations(testAttributionHtml, [{ place: testPlace, meetups: [testMeetup] }]);
         const mockUsersRepo = { isValidUser() {} };
+        const testLocationFilter = { type: 'someLocationType' };
+        const testMeetupFilter = {
+            type: 'someMeetupType',
+            fromDate: Date.now(),
+            toDate: Date.now() + 100
+        };
 
         beforeEach(function() {
             mockPlacesRepo = {
-                getPlaces(location, types, radius) { return Promise.resolve(testPlaceResults); },
+                getPlaces(location, type, radius) { return Promise.resolve(testPlaceResults); },
                 isValidPlace() {}
             };
             mockMeetupsRepo = {
@@ -91,33 +97,31 @@ describe('meetups business object', function() {
             };
         });
 
-        it('should query the places repository with the supplied parameters', async function() {
-            const testLocationFilter = { type: 'some location type' };
-            const testMeetupFilter = { type: 'some meetup type' };
+        it('should query the places repository with the supplied location and filter', async function() {
             const getPlacesSpy = sinon.spy(mockPlacesRepo, 'getPlaces');
             const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
 
             await meetups.findMeetupLocations(testCity, testLocationFilter, testMeetupFilter);
 
-            expect(getPlacesSpy).to.have.been.calledWith(testCity, testLocationFilter, testMeetupFilter);
+            expect(getPlacesSpy).to.have.been.calledWith(testCity, testLocationFilter.type);
         });
 
-        it('should provide default values for locationFilter and meetupFilter', async function() {
-            const getPlacesSpy = sinon.spy(mockPlacesRepo, 'getPlaces');
+        it('should provide default values for locationFilter and meetupFilter', function() {
             const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
 
-            await meetups.findMeetupLocations(testCity);
+            const result = meetups.findMeetupLocations(testCity);
 
-            expect(getPlacesSpy).to.have.been.calledWith(testCity, {}, {});
+            return expect(result).to.eventually.be.fulfilled;
         });
 
-        it('should query the meetups repository with the place ids extracted from the return of placeRepo.getPlaces()', async function() {
+        it('should query the meetups repository with the place ids extracted from the return of placeRepo.getPlaces() and the provided meetup filter', async function() {
             const getMeetupsSpy = sinon.spy(mockMeetupsRepo, 'getMeetups');
             const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+            const { type, fromDate, toDate } = testMeetupFilter;
 
-            await meetups.findMeetupLocations(testCity);
+            await meetups.findMeetupLocations(testCity, {}, testMeetupFilter);
 
-            expect(getMeetupsSpy).to.have.been.calledWith([testPlace.id]);
+            expect(getMeetupsSpy).to.have.been.calledWith([testPlace.id], type, fromDate, toDate);
         });
 
         it('should return a Promise that resolves to an meetupLocations object containing the requested meetups at the requested location', function() {
