@@ -1,10 +1,10 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const meetups = require('./meetups.js');
-const createPlace = require('../models/place.model.js');
+const createPlaceObject = require('../models/place.model.js');
 const createPlaceResults = require('../models/placeResults.model.js');
 const createMeetupLocations = require('../models/meetupLocations.model.js');
-const createMeetup = require('../models/meetup.model.js');
+const createMeetupObject = require('../models/meetup.model.js');
 
 const expect = chai.expect;
 const meetupsFactory = meetups.factory;
@@ -71,10 +71,20 @@ describe('meetups module', function() {
     describe('findMeetupLocations()', function() {
         let mockPlacesRepo, mockMeetupsRepo;
         const testCity = 'some city';
-        const testPlace = createPlace('1234', 'some place');
+        const testPlace = createPlaceObject('1234', 'some place');
         const testAttributionHtml = 'some attribution html';
         const testPlaceResults = createPlaceResults(testAttributionHtml, undefined, [testPlace]);
-        const testMeetup = createMeetup(undefined, 'some meetup', 'some meetup type', Date.now(), undefined, testPlace.id, 'some creator', ['some user id']);
+        const testMeetupData = {
+            id: 123,
+            name: 'some meetup',
+            type: 'some type',
+            startDate: Date.now(),
+            endDate: undefined,
+            location: testPlace.id,
+            creator: { id: 456, username: 'some user' },
+            attendees: []
+        };
+        const testMeetup = createMeetupObject(testMeetupData);
         const testMeetupLocations = createMeetupLocations(testAttributionHtml, [{ place: testPlace, meetups: [testMeetup] }]);
         const mockUsersRepo = { isValidUser() {} };
         const testLocationFilter = { type: 'someLocationType' };
@@ -156,8 +166,18 @@ describe('meetups module', function() {
     describe('createMeetup()', function() {
         let mockPlacesRepo, mockMeetupsRepo;
         const mockUsersRepo = { isValidUser() {} };
-        const testPlace = createPlace('1234', 'some place');
-        const testMeetup = createMeetup(undefined, 'some meetup', 'some meetup type', Date.now(), undefined, testPlace.id, 'some creator id', ['some creator id']);
+        const testPlace = createPlaceObject('1234', 'some place');
+        const testMeetupData = {
+            id: undefined,
+            name: 'some meetup',
+            type: 'some type',
+            startDate: Date.now(),
+            endDate: undefined,
+            location: testPlace.id,
+            creator: { id: 456, username: 'some user' },
+            attendees: [ { id: 456, username: 'some user' } ]
+        };
+        const testMeetup = createMeetupObject(testMeetupData);
 
         beforeEach(function() {
             mockPlacesRepo = {

@@ -4,7 +4,7 @@ const createMeetup = require('./meetup.model.js');
 const expect = chai.expect;
 
 const meetupModelSpec = {
-    id: 'some DB ID',
+    id: 123,
     name: 'some event',
     type: 'some event type',
     startDate: Date.now(),
@@ -16,12 +16,12 @@ const meetupModelSpec = {
 
 describe('Meetup model', function() {
     it('should create a properly formed meetup object', function() {
-        const { id, name, type, startDate, endDate, location, creator, attendees } = meetupModelSpec;
-        expect(createMeetup(id, name, type, startDate, endDate, location, creator, attendees)).to.deep.equal(meetupModelSpec);
+        expect(createMeetup(meetupModelSpec)).to.deep.equal(meetupModelSpec);
     });
 
     it('should default attendees to the creator, if no attendees are provided', function() {
         const { id, name, type, startDate, endDate, location, creator } = meetupModelSpec;
-        expect(createMeetup(id, name, type, startDate, endDate, location, creator)).to.deep.equal(meetupModelSpec);
+        const attendeeLessMeetup = { id, name, type, startDate, endDate, location, creator };
+        expect(createMeetup(attendeeLessMeetup)).to.deep.equal(meetupModelSpec);
     });
 });

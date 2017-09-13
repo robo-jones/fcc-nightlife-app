@@ -17,7 +17,16 @@ async function createMeetup(placesRepo, meetupsRepo, placeId, name, type, creato
     if (!await placesRepo.isValidPlace(placeId)) {
         throw new Error('Invalid place id passed to createMeetup');
     } else {
-        const newMeetup = createMeetupObject(undefined, name, type, startDate, endDate, placeId, creator);
+        const newMeetupData = {
+            id: undefined,
+            name,
+            type,
+            creator,
+            startDate,
+            endDate,
+            location: placeId
+        };
+        const newMeetup = createMeetupObject(newMeetupData);
         await meetupsRepo.addMeetup(newMeetup);
     }
 };
