@@ -12,7 +12,7 @@ const meetupsFactory = meetups.factory;
 chai.use(require('sinon-chai'));
 chai.use(require('chai-as-promised'));
 
-describe('meetups business object', function() {
+describe('meetups module', function() {
     it('should export an meetups factory function', function() {
         expect(meetups.factory).to.be.a('function');
     });
