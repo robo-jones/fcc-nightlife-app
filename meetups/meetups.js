@@ -13,9 +13,11 @@ async function findMeetupLocations(placesRepo, meetupsRepo, location, locationFi
     return createMeetupLocations(placeResults.attributionHtml, locations);
 };
 
-async function createMeetup(placesRepo, meetupsRepo, placeId, name, type, creator, startDate, endDate) {
+async function createMeetup(placesRepo, meetupsRepo, usersRepo, placeId, name, type, creator, startDate, endDate) {
     if (!await placesRepo.isValidPlace(placeId)) {
         throw new Error('Invalid place id passed to createMeetup');
+    } else if (!await usersRepo.isValidUser(creator)) {
+        throw new Error('Invalid creator id passed to createMeetup');
     } else {
         const newMeetupData = {
             id: undefined,
@@ -96,7 +98,7 @@ function factory(placesRepo, meetupsRepo, usersRepo) {
 
     return {
         findMeetupLocations: findMeetupLocations.bind(undefined, placesRepo, meetupsRepo),
-        createMeetup: createMeetup.bind(undefined, placesRepo, meetupsRepo),
+        createMeetup: createMeetup.bind(undefined, placesRepo, meetupsRepo, usersRepo),
         rsvp: rsvp.bind(undefined, meetupsRepo, usersRepo),
         unRsvp: unRsvp.bind(undefined, meetupsRepo)
     };

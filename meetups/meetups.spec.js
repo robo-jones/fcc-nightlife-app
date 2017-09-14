@@ -164,8 +164,7 @@ describe('meetups module', function() {
     });
 
     describe('createMeetup()', function() {
-        let mockPlacesRepo, mockMeetupsRepo;
-        const mockUsersRepo = { isValidUser() {} };
+        let mockPlacesRepo, mockMeetupsRepo, mockUsersRepo;
         const testPlace = createPlaceObject('1234', 'some place');
         const testMeetupData = {
             id: undefined,
@@ -174,8 +173,8 @@ describe('meetups module', function() {
             startDate: Date.now(),
             endDate: undefined,
             location: testPlace.id,
-            creator: { id: 456, username: 'some user' },
-            attendees: [ { id: 456, username: 'some user' } ]
+            creator: 456,
+            attendees: [ 456 ]
         };
         const testMeetup = createMeetupObject(testMeetupData);
 
@@ -191,6 +190,9 @@ describe('meetups module', function() {
                 addMeetup() {},
                 addAttendee() {},
                 removeAttendee() {}
+            };
+            mockUsersRepo = {
+                isValidUser: () => Promise.resolve(true)
             };
         });
 
@@ -212,6 +214,26 @@ describe('meetups module', function() {
             const result = meetups.createMeetup(testPlace.id, name, type, creator, startDate);
 
             return expect(result).to.eventually.be.rejectedWith('Invalid place id passed to createMeetup');
+        });
+
+        it('should check that the creator is a valid user id', async function() {
+            const isValidUserSpy = sinon.spy(mockUsersRepo, 'isValidUser');
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+            const { name, type, creator, startDate } = testMeetup;
+
+            await meetups.createMeetup(testPlace.id, name, type, creator, startDate);
+
+            expect(isValidUserSpy).to.have.been.calledWith(creator);
+        });
+
+        it('should return a rejected Promise with an \'Invalid creator id passed to createMeetup\' error if it isn\'t', async function() {
+            sinon.stub(mockUsersRepo, 'isValidUser').returns(Promise.resolve(false));
+            const meetups = meetupsFactory(mockPlacesRepo, mockMeetupsRepo, mockUsersRepo);
+            const { name, type, creator, startDate } = testMeetup;
+
+            const result = meetups.createMeetup(testPlace.id, name, type, creator, startDate);
+
+            return expect(result).to.eventually.be.rejectedWith('Invalid creator id passed to createMeetup');
         });
 
         it('should call meetupsRepo.addMeetup() with a properly formed Meetup object', async function() {
