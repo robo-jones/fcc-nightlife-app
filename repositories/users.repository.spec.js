@@ -31,10 +31,13 @@ describe('Users repository', function() {
             };
             const querySpy = sinon.spy(mockDb, 'query');
             const usersRepository = usersRepositoryFactory(mockDb);
+            const expectedSql = 'SELECT 1 FROM users WHERE id = %1';
+            const expectedValues = [ testId ];
 
             usersRepository.isValidUser(testId);
 
-            expect(querySpy.firstCall.args[1]).to.deep.equal([ testId ]);
+            expect(querySpy.firstCall.args[0]).to.deep.equal(expectedSql);
+            expect(querySpy.firstCall.args[1]).to.deep.equal(expectedValues);
         });
 
         it('should return a Promise that resolves to true if the user exists', async function() {

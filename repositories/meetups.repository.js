@@ -81,7 +81,7 @@ async function addMeetup(db, meetup) {
 }
 
 async function removeAttendee(db, meetupId, userId) {
-    const lookupSql = 'SELECT attendees FROM meetups WHERE id = $1';
+    const lookupSql = 'SELECT attendees FROM meetups WHERE id = $1;';
     const lookupValues = [ meetupId ];
 
     try {
@@ -98,7 +98,7 @@ async function removeAttendee(db, meetupId, userId) {
 
         const newAttendees = rows[0].attendees.filter((id) => (id !== userId));
 
-        const updateSql = 'UPDATE meetups SET attendees = $1 WHERE id = $2';
+        const updateSql = 'UPDATE meetups SET attendees = $1 WHERE id = $2;';
         const updateValues = [ newAttendees ];
 
         await db.query(updateSql, updateValues);
@@ -108,10 +108,14 @@ async function removeAttendee(db, meetupId, userId) {
 }
 
 module.exports.factory = function(db) {
-    return {
-        getMeetups: getMeetups.bind(undefined, db),
-        addAttendee: addAttendee.bind(undefined, db),
-        addMeetup: addMeetup.bind(undefined, db),
-        removeAttendee: removeAttendee.bind(undefined, db)
-    };
+    if(!db || !db.query) {
+        throw new TypeError('Invalid database connection passed to meetupsRepository factory');
+    } else {
+        return {
+            getMeetups: getMeetups.bind(undefined, db),
+            addAttendee: addAttendee.bind(undefined, db),
+            addMeetup: addMeetup.bind(undefined, db),
+            removeAttendee: removeAttendee.bind(undefined, db)
+        };
+    }
 };

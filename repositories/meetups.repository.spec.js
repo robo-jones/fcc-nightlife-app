@@ -16,17 +16,22 @@ describe('Meetups repository', function() {
     });
 
     describe('factory function', function() {
+        const mockDb = { query: () => {} };
+
         it('should create a getMeetups() function', function() {
-            expect(meetupsRepositoryFactory().getMeetups).to.be.a('function');
+            expect(meetupsRepositoryFactory(mockDb).getMeetups).to.be.a('function');
         });
         it('should create an addAttendee() function', function() {
-            expect(meetupsRepositoryFactory().addAttendee).to.be.a('function');
+            expect(meetupsRepositoryFactory(mockDb).addAttendee).to.be.a('function');
         });
         it('should create an addMeetup() function', function() {
-            expect(meetupsRepositoryFactory().addMeetup).to.be.a('function');
+            expect(meetupsRepositoryFactory(mockDb).addMeetup).to.be.a('function');
         });
         it('should create a removeAttendee() function', function() {
-            expect(meetupsRepositoryFactory().removeAttendee).to.be.a('function');
+            expect(meetupsRepositoryFactory(mockDb).removeAttendee).to.be.a('function');
+        });
+        it('should throw an \'Invalid database connection passed to meetupsRepository factory\' TypeError if it does not receive a valid database connection', function() {
+            expect(() => meetupsRepositoryFactory(undefined)).to.throw(TypeError, 'Invalid database connection passed to meetupsRepository factory');
         });
     });
 
@@ -42,9 +47,24 @@ describe('Meetups repository', function() {
             };
             const dbSpy = sinon.stub(mockDb, 'query').resolves([]);
             const meetupsRepository = meetupsRepositoryFactory(mockDb);
+            const expectedRawSql = `SELECT meetups.id,
+                                           meetups.name,
+                                           meetups.type,
+                                           meetups.startDate,
+                                           meetups.endDate,
+                                           meetups.location,
+                                           JSON_AGG((SELECT data FROM (SELECT u1.id, u1.username) data))::json->0 AS creator,
+                                           JSON_AGG((SELECT data FROM (SELECT u2.id, u2.uertname) data)) AS attendees
+                                    FROM meetups
+                                    LEFT JOIN users u1 ON u1.id = meetups.creator
+                                    LEFT JOIN users u2 ON u2.id = ANY(meetups.attendees)
+                                    WHERE meetups.location = ANY($1) AND meetups.startDate >= $2 AND meetups.endDate <= $3
+                                    GROUP BY meetups.id;`;
+            const expectedSql = expectedRawSql.replace(/\s+/g,' ').trim(); //since this is a YUGE query, trim any formatting spaces from it to make comparison less brittle
 
             meetupsRepository.getMeetups(testLocations);
 
+            expect(dbSpy.firstCall.args[0].replace(/\s+/g,' ').trim()).to.equal(expectedSql); //trim any formatting spaces from the actual sql to ensure a good comparison
             expect(dbSpy.firstCall.args[1]).to.contain(testLocations);
         });
 
@@ -77,9 +97,23 @@ describe('Meetups repository', function() {
             };
             const dbSpy = sinon.stub(mockDb, 'query').resolves([]);
             const meetupsRepository = meetupsRepositoryFactory(mockDb);
-
+            const expectedRawSql = `SELECT meetups.id,
+                                           meetups.name,
+                                           meetups.type,
+                                           meetups.startDate,
+                                           meetups.endDate,
+                                           meetups.location,
+                                           JSON_AGG((SELECT data FROM (SELECT u1.id, u1.username) data))::json->0 AS creator,
+                                           JSON_AGG((SELECT data FROM (SELECT u2.id, u2.uertname) data)) AS attendees
+                                    FROM meetups
+                                    LEFT JOIN users u1 ON u1.id = meetups.creator
+                                    LEFT JOIN users u2 ON u2.id = ANY(meetups.attendees)
+                                    WHERE meetups.location = ANY($1) AND meetups.type = $2 AND meetups.startDate >= $3 AND meetups.endDate <=$4
+                                    GROUP BY meetups.id;`;
+            const expectedSql = expectedRawSql.replace(/\s+/g,' ').trim(); //since this is a YUGE query, trim any formatting spaces from it to make comparison less brittle
             meetupsRepository.getMeetups(testLocations, testType);
 
+            expect(dbSpy.firstCall.args[0].replace(/\s+/g,' ').trim()).to.equal(expectedSql); //trim any formatting spaces from the actual sql to ensure a good comparison
             expect(dbSpy.firstCall.args[1]).to.contain(testType);
         });
 
@@ -89,9 +123,23 @@ describe('Meetups repository', function() {
             };
             const dbSpy = sinon.stub(mockDb, 'query').resolves([]);
             const meetupsRepository = meetupsRepositoryFactory(mockDb);
-
+            const expectedRawSql = `SELECT meetups.id,
+                                           meetups.name,
+                                           meetups.type,
+                                           meetups.startDate,
+                                           meetups.endDate,
+                                           meetups.location,
+                                           JSON_AGG((SELECT data FROM (SELECT u1.id, u1.username) data))::json->0 AS creator,
+                                           JSON_AGG((SELECT data FROM (SELECT u2.id, u2.uertname) data)) AS attendees
+                                    FROM meetups
+                                    LEFT JOIN users u1 ON u1.id = meetups.creator
+                                    LEFT JOIN users u2 ON u2.id = ANY(meetups.attendees)
+                                    WHERE meetups.location = ANY($1) AND meetups.type = $2 AND meetups.startDate >= $3 AND meetups.endDate <=$4
+                                    GROUP BY meetups.id;`;
+            const expectedSql = expectedRawSql.replace(/\s+/g,' ').trim(); //since this is a YUGE query, trim any formatting spaces from it to make comparison less brittle
             meetupsRepository.getMeetups(testLocations, testType, testStartDate);
 
+            expect(dbSpy.firstCall.args[0].replace(/\s+/g,' ').trim()).to.equal(expectedSql); //trim any formatting spaces from the actual sql to ensure a good comparison
             expect(dbSpy.firstCall.args[1]).to.contain(testStartDate);
         });
 
@@ -101,9 +149,24 @@ describe('Meetups repository', function() {
             };
             const dbSpy = sinon.stub(mockDb, 'query').resolves([]);
             const meetupsRepository = meetupsRepositoryFactory(mockDb);
+            const expectedRawSql = `SELECT meetups.id,
+                                           meetups.name,
+                                           meetups.type,
+                                           meetups.startDate,
+                                           meetups.endDate,
+                                           meetups.location,
+                                           JSON_AGG((SELECT data FROM (SELECT u1.id, u1.username) data))::json->0 AS creator,
+                                           JSON_AGG((SELECT data FROM (SELECT u2.id, u2.uertname) data)) AS attendees
+                                    FROM meetups
+                                    LEFT JOIN users u1 ON u1.id = meetups.creator
+                                    LEFT JOIN users u2 ON u2.id = ANY(meetups.attendees)
+                                    WHERE meetups.location = ANY($1) AND meetups.type = $2 AND meetups.startDate >= $3 AND meetups.endDate <=$4
+                                    GROUP BY meetups.id;`;
+            const expectedSql = expectedRawSql.replace(/\s+/g,' ').trim(); //since this is a YUGE query, trim any formatting spaces from it to make comparison less brittle
 
             meetupsRepository.getMeetups(testLocations, testType, testStartDate, testEndDate);
 
+            expect(dbSpy.firstCall.args[0].replace(/\s+/g,' ').trim()).to.equal(expectedSql); //trim any formatting spaces from the actual sql to ensure a good comparison
             expect(dbSpy.firstCall.args[1]).to.contain(testEndDate);
         });
 
@@ -142,9 +205,11 @@ describe('Meetups repository', function() {
             };
             const querySpy = sinon.spy(mockDb, 'query');
             const meetupsRepository = meetupsRepositoryFactory(mockDb);
+            const expectedSql = 'SELECT attendees FROM meetups WHERE id = $1;';
 
             meetupsRepository.addAttendee(testMeetupId, newAttendee);
 
+            expect(querySpy.firstCall.args[0]).to.equal(expectedSql);
             expect(querySpy.firstCall.args[1]).to.contain(testMeetupId);
         });
 
@@ -163,12 +228,13 @@ describe('Meetups repository', function() {
             const mockDb = {
                 query: () => Promise.resolve([{ attendees: testAttendees }])
             };
-
+            const expectedSql = 'UPDATE meetups SET attendees = $1 WHERE id = $2;';
             const querySpy = sinon.spy(mockDb, 'query');
             const meetupsRepository = meetupsRepositoryFactory(mockDb);
 
             await meetupsRepository.addAttendee(testMeetupId, newAttendee);
 
+            expect(querySpy.secondCall.args[0]).to.equal(expectedSql);
             expect(querySpy.secondCall.args[1][0]).to.deep.equal(expectedAttendees);
         });
 
@@ -202,12 +268,13 @@ describe('Meetups repository', function() {
             const mockDb = {
                 query: function() {}
             };
-
+            const expectedSql = 'INSERT INTO meetups (name, type, startDate, endDate, location, creator, attendees) VALUES ($1, $2, $3, $4, $5, $6, $7);';
             const querySpy = sinon.spy(mockDb, 'query');
             const meetupsRepository = meetupsRepositoryFactory(mockDb);
 
             meetupsRepository.addMeetup(testMeetup);
 
+            expect(querySpy.firstCall.args[0]).to.equal(expectedSql);
             expect(querySpy.firstCall.args[1]).to.deep.equal(expectedArgs);
         });
 
@@ -234,9 +301,11 @@ describe('Meetups repository', function() {
             };
             const querySpy = sinon.spy(mockDb, 'query');
             const meetupsRepository = meetupsRepositoryFactory(mockDb);
+            const expectedSql = 'SELECT attendees FROM meetups WHERE id = $1;';
 
             meetupsRepository.removeAttendee(testMeetupId, attendeeToBeRemoved);
 
+            expect(querySpy.firstCall.args[0]).to.equal(expectedSql);
             expect(querySpy.firstCall.args[1]).to.deep.equal([ testMeetupId ]);
         });
 
@@ -266,9 +335,11 @@ describe('Meetups repository', function() {
             const querySpy = sinon.spy(mockDb, 'query');
             const meetupsRepository = meetupsRepositoryFactory(mockDb);
             const expectedAttendees = testAttendees.filter((id) => (id !== attendeeToBeRemoved));
+            const expectedSql = 'UPDATE meetups SET attendees = $1 WHERE id = $2;';
 
             await meetupsRepository.removeAttendee(testMeetupId, attendeeToBeRemoved);
 
+            expect(querySpy.secondCall.args[0]).to.equal(expectedSql);
             expect(querySpy.secondCall.args[1]).to.deep.equal([ expectedAttendees ]);
         });
 
